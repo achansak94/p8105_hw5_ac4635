@@ -128,42 +128,45 @@ homicide_df =
     ##   disposition = col_character()
     ## )
 
-## Problem 2 ideas …
+# Problem 2
 
-import one dataset
+### Dataset Description:
 
-``` r
-data_1 = read_csv("./data/con_01.csv")
-```
+This dataset contains information from a longitudinal study that
+included a control arm and an experimental arm. Data for each
+participant is included in a separate file, and file names include the
+subject ID and arm. The ‘map’ function was used to iterate and read in
+all of the Excel files from the zipped folder.
 
-    ## Parsed with column specification:
-    ## cols(
-    ##   week_1 = col_double(),
-    ##   week_2 = col_double(),
-    ##   week_3 = col_double(),
-    ##   week_4 = col_double(),
-    ##   week_5 = col_double(),
-    ##   week_6 = col_double(),
-    ##   week_7 = col_double(),
-    ##   week_8 = col_double()
-    ## )
+Create a dataframe containing all file names, tidy the result, an d
+manipulate file names to include control arm and subject ID. Ensured
+weekly observations are “tidy”.
 
 ``` r
 path_df = 
   tibble(
-    path = list.files("lda_data"),
+    path = list.files(path = "./lda_data")) %>%
+ mutate(
+   data = map(.x = str_c("lda_data/", path), ~read_csv(.x))
+    ) %>% 
+unnest(data) %>% 
+separate(path, into = c("Arm", "ID", "csv")) %>%
+  pivot_longer(
+    week_1:week_8,
+    names_to = "Week",
+    names_prefix = "week_",
+    values_to = "Observation"
+    ) %>% 
+select(-csv) %>% 
+mutate(
+  Arm = str_replace(Arm, "con", "Control"),
+  Arm = str_replace(Arm, "exp", "Experiment")
   ) %>% 
-  mutate(
-    path = str_c("lda_data/", path),
-    data = map(.............))
+arrange(Arm, ID) %>% 
+  view()
 ```
 
-    ## Error: Problem with `mutate()` input `data`.
-    ## x argument ".f" is missing, with no default
-    ## ℹ Input `data` is `map(.............)`.
+### Spaghetti Plot:
 
-``` r
-read_csv(path_df$path[[1]])
-```
-
-    ## Error in is.connection(x): object 'path_df' not found
+Make a spaghetti plot showing observations on each subject over time,
+and comment on differences between groups.

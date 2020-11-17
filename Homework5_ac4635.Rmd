@@ -78,7 +78,6 @@ results_df =
 ```
 
 
-
 ```{r}
 results_df %>% 
   mutate(city_state = fct_reorder(city_state, estimate)) %>% 
@@ -87,7 +86,6 @@ results_df %>%
   geom_errorbar(aes(ymin = conf.low, ymax = conf.high)) + 
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
 ```
-
 
 
 ```{r, error = TRUE}
@@ -112,24 +110,49 @@ homicide_df =
 ```
 
 
+# Problem 2 
 
 
+### Dataset Description:
 
-## Problem 2 ideas ...
+This dataset contains information from a longitudinal study that included a control arm and an experimental arm. Data for each participant is included in a separate file, and file names include the subject ID and arm.
+The 'map' function was used to iterate and read in all of the Excel files from the zipped folder.
 
+Create a dataframe containing all file names, tidy the result, an d manipulate file names to include control arm and subject ID. Ensured weekly observations are “tidy”. 
 
-import one dataset 
+```{r eval = FALSE}
 
-```{r}
-data_1 = read_csv("./data/con_01.csv")
-```
-
-```{r, error = TRUE}
 path_df = 
   tibble(
-    path = list.files("lda_data"),
+    path = list.files(path = "./lda_data")) %>%
+ mutate(
+   data = map(.x = str_c("lda_data/", path), ~read_csv(.x))
+    ) %>% 
+unnest(data) %>% 
+separate(path, into = c("Arm", "ID", "csv")) %>%
+  pivot_longer(
+    week_1:week_8,
+    names_to = "Week",
+    names_prefix = "week_",
+    values_to = "Observation"
+    ) %>% 
+select(-csv) %>% 
+mutate(
+  Arm = str_replace(Arm, "con", "Control"),
+  Arm = str_replace(Arm, "exp", "Experiment")
   ) %>% 
-  mutate(
-    path = str_c("lda_data/", path),
-    data = map(.............))
-read_csv(path_df$path[[1]])
+arrange(Arm, ID) %>% 
+  view()
+
+```
+
+### Spaghetti Plot:
+
+Make a spaghetti plot showing observations on each subject over time, and comment on differences between groups.
+
+
+```{r}
+
+```
+
+

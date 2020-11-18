@@ -168,5 +168,13 @@ spag_plot1 =
   long_df %>% 
   ggplot(aes(x = Week, y = Observation,color = ID)) +
   geom_line(aes(group = ID)) +
-  facet_grid(.~Arm)
+  facet_grid(.~Arm) +
+  labs(
+    title = "Observations on each subject over time",
+    x = "Week",
+    y = "Observation"
+  )
+
+spag_plot
+spag_plot1 
 ```

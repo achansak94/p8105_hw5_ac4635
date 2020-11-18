@@ -425,5 +425,20 @@ spag_plot1 =
   long_df %>% 
   ggplot(aes(x = Week, y = Observation,color = ID)) +
   geom_line(aes(group = ID)) +
-  facet_grid(.~Arm)
+  facet_grid(.~Arm) +
+  labs(
+    title = "Observations on each subject over time",
+    x = "Week",
+    y = "Observation"
+  )
+
+spag_plot
 ```
+
+<img src="Homework5_ac4635_files/figure-gfm/unnamed-chunk-8-1.png" width="90%" />
+
+``` r
+spag_plot1 
+```
+
+<img src="Homework5_ac4635_files/figure-gfm/unnamed-chunk-8-2.png" width="90%" />

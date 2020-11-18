@@ -120,9 +120,9 @@ The 'map' function was used to iterate and read in all of the Excel files from t
 
 Create a dataframe containing all file names, tidy the result, an d manipulate file names to include control arm and subject ID. Ensured weekly observations are “tidy”. 
 
-```{r eval = FALSE}
+```{r }
 
-path_df = 
+long_df = 
   tibble(
     path = list.files(path = "./lda_data")) %>%
  mutate(
@@ -141,10 +141,12 @@ mutate(
   Arm = str_replace(Arm, "con", "Control"),
   Arm = str_replace(Arm, "exp", "Experiment")
   ) %>% 
-arrange(Arm, ID) %>% 
-  view()
+arrange(Arm, ID)
+
+long_df
 
 ```
+
 
 ### Spaghetti Plot:
 
@@ -152,7 +154,19 @@ Make a spaghetti plot showing observations on each subject over time, and commen
 
 
 ```{r}
+spag_plot = 
+  long_df %>% 
+  ggplot(aes(x = Week, y = Observation, group = interaction(Arm, ID), color = Arm)) + 
+  geom_line(alpha=0.7) + 
+  labs(
+    x = "Week",
+    y = "Observation",
+    title = "Observations per Arm by week"
+  )
 
+spag_plot1 = 
+  long_df %>% 
+  ggplot(aes(x = Week, y = Observation,color = ID)) +
+  geom_line(aes(group = ID)) +
+  facet_grid(.~Arm)
 ```
-
-

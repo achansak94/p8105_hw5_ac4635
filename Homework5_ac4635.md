@@ -442,3 +442,173 @@ spag_plot1
 ```
 
 <img src="Homework5_ac4635_files/figure-gfm/unnamed-chunk-8-2.png" width="90%" />
+
+The observations in the experiment group rose over the study period,
+while the observations in the control group remained the same. The
+difference in observations between the experiment group and the control
+group became apparent at the week 2 time points. Generally, the control
+group had fewer observation values compared to the experimental group.
+
+# Problem 3
+
+### Part 1
+
+``` r
+set.seed(45)
+
+sim_t_test = function(sample_size = 30, mu = 0, sigma = 5){
+  
+  sim_data = 
+    tibble(
+      x = rnorm(sample_size, mean = mu, sd = sigma)
+    )
+  
+  sim_data %>%
+  t.test(mu = 0, conf.level = 0.95) %>%
+  broom::tidy() %>% 
+  select(estimate, p.value)
+}
+```
+
+``` r
+results =
+  rerun(5000, sim_t_test()) %>% 
+  bind_rows() %>% 
+  view
+```
+
+### Part 2
+
+``` r
+results_2 =
+  tibble(
+    mu = c(0:6)
+  ) %>% 
+  mutate(
+    output_lists = map(.x = mu, ~ rerun(5000, sim_t_test(mu = .x))),
+    est_df = map(output_lists, bind_rows)
+  ) %>% 
+  select(-output_lists) %>% 
+  unnest(est_df)
+
+results_2 %>% view
+```
+
+### Part 3
+
+Make a plot showing the proportion of times the null was rejected (the
+power of the test) on the y axis and the true value of μ on the x axis.
+Describe the association between effect size and power.
+
+``` r
+results_df2 =
+results_2 %>% 
+  group_by(mu) %>% 
+  mutate(
+    pvalue_rej = case_when(
+      p.value < 0.05 ~ "Reject Null",
+      p.value > 0.05 ~ "Fail to Reject Null")
+    )
+    
+Plot1 = results_df2 %>% 
+  group_by(mu) %>% 
+  summarise(
+    reject = sum(p.value < 0.05),
+    total = n(),
+    proportion = reject/total) %>% 
+  ggplot(aes(x = mu, y = proportion)) + 
+  geom_point(alpha = 0.7, size = 2) +
+  geom_line() +
+  labs(
+    title = "Effect Size and Power Association",
+    x = "True Mu Value",
+    y = "Power: Proportion of Null Rejected"
+  ) + 
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+    ## `summarise()` ungrouping output (override with `.groups` argument)
+
+``` r
+Plot1
+```
+
+<img src="Homework5_ac4635_files/figure-gfm/Plot_1-1.png" width="90%" />
+
+From observing the plot, as effect size (True μ) increases, power also
+increases.
+
+Plot the average estimate of the sample mean on the y axis and the true
+population mean on the x-axis.
+
+``` r
+Plot2 = results_df2 %>%
+  group_by(mu) %>%
+  summarize(
+    avg_est = mean(estimate)
+  ) %>% 
+  ggplot(aes(x = mu, y = avg_est)) + 
+  geom_point(alpha = 0.7, size = 2) +
+  geom_line() +
+  labs(
+    title = "Average estimate of μ vs. True value of μ",
+    x = "True Mu Value",
+    y = "Average of Sample Mean"
+  ) + 
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+    ## `summarise()` ungrouping output (override with `.groups` argument)
+
+``` r
+Plot2 
+```
+
+<img src="Homework5_ac4635_files/figure-gfm/Plot2-1.png" width="90%" />
+
+Make a plot on the average estimate of μ̂ only in samples for which the
+null was rejected on the y axis and the true value of μ on the x axis.
+
+``` r
+Plot3 =
+  results_df2 %>% 
+  group_by(mu) %>%
+  filter(pvalue_rej == "Reject Null") %>% 
+ summarize(
+    avg_est = mean(estimate)
+  ) %>% 
+  ggplot(aes(x = mu, y = avg_est)) + 
+  geom_point(alpha = 0.7, size = 2) +
+  geom_line() +
+  labs(
+    title = "Rejected Null Values",
+    x = "True Mu Value",
+    y = "Average of Sample Mean"
+  ) + 
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+    ## `summarise()` ungrouping output (override with `.groups` argument)
+
+``` r
+Plot3
+```
+
+<img src="Homework5_ac4635_files/figure-gfm/Rejected-1.png" width="90%" />
+
+``` r
+Plot2 + Plot3
+```
+
+<img src="Homework5_ac4635_files/figure-gfm/Patchwork-1.png" width="90%" />
+
+We found that the sample average of mu is not equal to the true mu
+across tests for which the null is rejected, however when the effect
+size increases (between 4 and 6), the sample average of mu is
+approximately equal to the true mu. When the effect size is small (\<
+2), then the ample average of mu seems to overestimate the true mu. For
+simulating large sample means (e.g 5 and 6), we have greater power and
+therefore a higher likelihood finding evidence to reject the null. When
+simulating small sample means (e.g. 1 and 2), we are more likely to draw
+samples that are closer to the null distribution (mu=0) and therefore
+have less power and a lower chance of rejecting the null hypothesis,.
